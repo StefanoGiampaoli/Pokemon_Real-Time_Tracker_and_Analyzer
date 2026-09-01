@@ -1,0 +1,18 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Bytecode Python
+__pycache__/
+*.pyc
+
+# Cartelle e file di PyInstaller
+build/
+dist/
+*.spec
+
+# File temporanei di sistema o editor
+.vscode/
+.idea/
+*.log

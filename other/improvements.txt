@@ -1,0 +1,3 @@
+Aggiungi mega
+Aggiungi 'Thick Fat' --> modifica resistenze (+1 livello resistenza)
+Aggiungi numero pokedex (id) e ordina dataset per quello
