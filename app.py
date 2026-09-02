@@ -1,10 +1,21 @@
 # IMPORTS
 import pandas as pd
-from data_cleaner import get_cleaned_dataset
+import ast
+import sys
+import os
+
+# find the correct path
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 # LOAD DATASET ALREADY CLEANED
-new_df = get_cleaned_dataset("pokemon.csv")
-clmns_name = new_df.columns.tolist()
+df = pd.read_csv(resource_path('final_pokemon.csv'))
+df['abilities'] = df['abilities'].apply(ast.literal_eval)
+clmns_name = df.columns.tolist()
 
 # APP STARTING
 while True:
@@ -14,19 +25,18 @@ while True:
     break
   else:
     # check if pokemon's name was written correctly
-    match_df = new_df[new_df['name'] == name]
+    match_df = df[df['name'] == name]
     if match_df.empty:
       print(f"Pokemon '{name}' non trovato\n")
       continue
 
     # gather info about the wanted pokemon
-    info = new_df[new_df['name'] == name].values.flatten()
-
+    info = df[df['name'] == name].values.flatten()
 
     # check for additional immunities thanks to some ability
     blocking_moves_abilities = [
-      ['Water Absord', 'Storm Drain', 'Dry Skin'], 
-      ['Volt Absord', 'Lightningrod', "Motor Drive"], 
+      ['Water Absorb', 'Storm Drain', 'Dry Skin'], 
+      ['Volt Absorb', 'Lightningrod', "Motor Drive"], 
       ['Flash Fire'], ['Sap Sipper'], ['Levitate']
     ]
 
@@ -96,7 +106,8 @@ while True:
     if immunity:
       print(f"Immune a mosse di tipo: {immunity}")
 
-    if not additional_immunity == "":
+    # print the warning only if blocking ability is not the only one that the pokemon has
+    if len(abilities) > 1 and not additional_immunity == "":
       print(f"ATTENZIONE!!! Il pokemon potrebbe possedere l'abilità {blocking_ability.strip()}, quindi con un'immunità aggiuntiva al tipo {additional_immunity}")
 
     print("\n")

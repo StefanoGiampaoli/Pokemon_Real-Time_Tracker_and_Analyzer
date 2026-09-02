@@ -5,9 +5,10 @@ env/
 
 # Bytecode Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 
-# Cartelle e file di PyInstaller
+# PyInstaller & Build
 build/
 dist/
 *.spec
@@ -16,3 +17,12 @@ dist/
 .vscode/
 .idea/
 *.log
+.DS_Store
+Thumbs.db
+
+# File temporanei / demo personali
+improvements.txt
+demo.py
+
+# Dati (scommenta se vuoi ignorare i file generati)
+# final_pokemon.csv
