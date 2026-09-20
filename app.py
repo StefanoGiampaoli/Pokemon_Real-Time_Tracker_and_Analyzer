@@ -17,9 +17,14 @@ df = pd.read_csv(resource_path('final_pokemon.csv'))
 df['abilities'] = df['abilities'].apply(ast.literal_eval)
 clmns_name = df.columns.tolist()
 
+# INSTRUCTIONS ON HOW TO SEARCH FOR POKEMONS
+print("For alolan regional forms digit: alolan <pokemon name>")
+print("For mega forms digit: mega <pokemon name>")
+print("For primal forms digit: primal <pokemon name>")
+
 # APP STARTING
 while True:
-  print("Inserisci il nome di un pokemon: (q per uscire)")
+  print("What pokemon do you want to look for? (q to quit)")
   name = input().strip().lower()
   if name == 'q':
     break
@@ -27,7 +32,7 @@ while True:
     # check if pokemon's name was written correctly
     match_df = df[df['name'] == name]
     if match_df.empty:
-      print(f"Pokemon '{name}' non trovato\n")
+      print(f"Pokemon '{name}' not found\n")
       continue
 
     # gather info about the wanted pokemon
@@ -88,26 +93,33 @@ while True:
     second_type = info[2]
 
     if not pd.isna(second_type):
-      print(f"Primo tipo: {first_type}")
-      print(f"Secondo tipo: {second_type}")
+      print(f"First type: {first_type}")
+      print(f"Second type: {second_type}")
     else:
-      print(f"Tipo: {first_type}")
+      print(f"Mono type: {first_type}")
 
     if quad_effective:
-      print(f"Debole x4 a mosse di tipo: {quad_effective}")
+      print(f"x4 weakness against: {quad_effective}")
 
-    print(f"Debole x2 a mosse di tipo: {super_effective}")
-    print(f"Neutro contro mosse di tipo: {normal}")
-    print(f"Resistente x2 a mosse di tipo: {resistence}")
+    if super_effective:
+      print(f"x2 weakness against: {super_effective}")
+
+    print(f"Neutral damage against: {normal}")
+
+    if resistence:
+      print(f"x2 resistant against: {resistence}")
 
     if quad_resistence:
-      print(f"Resistente x4 a mosse di tipo: {quad_resistence}")
+      print(f"x4 resistant against: {quad_resistence}")
 
     if immunity:
-      print(f"Immune a mosse di tipo: {immunity}")
+      print(f"Immune against: {immunity}")
 
     # print the warning only if blocking ability is not the only one that the pokemon has
     if len(abilities) > 1 and not additional_immunity == "":
-      print(f"ATTENZIONE!!! Il pokemon potrebbe possedere l'abilità {blocking_ability.strip()}, quindi con un'immunità aggiuntiva al tipo {additional_immunity}")
+      print(f"WATCH OUT!!! This pokemon could have '{blocking_ability.strip()}', meaning an additional immunity against {additional_immunity}")
+
+    if 'Thick Fat' in abilities:
+      print(f"{name.capitalize()} could have 'Thick Fat' as ability, increasing its resistance against Fire and Ice moves")
 
     print("\n")
