@@ -4,6 +4,14 @@ import ast
 import sys
 import os
 
+# if the pokemon ONLY has a blocking ability as its ability, move the blocked type location
+def change_immunities(additional_immunity):
+  data = [quad_effective, super_effective, normal, resistence, quad_resistence]
+  for case in data:
+    if additional_immunity in case:
+      case.remove(additional_immunity)
+      immunity.append(additional_immunity)
+
 # find the correct path
 def resource_path(relative_path):
     try:
@@ -98,6 +106,12 @@ while True:
     else:
       print(f"Mono type: {first_type}")
 
+    if len(abilities) > 1 and not additional_immunity == '':
+      print(f"WATCH OUT!!! This pokemon could have '{blocking_ability.strip()}', meaning an additional immunity against {additional_immunity}")
+    else:
+      change_immunities(additional_immunity)
+      print(f"WATCH OUT!!! This pokemon has '{blocking_ability.strip()}', meaning an additional immunity against {additional_immunity}")
+    
     if quad_effective:
       print(f"x4 weakness against: {quad_effective}")
 
@@ -114,10 +128,6 @@ while True:
 
     if immunity:
       print(f"Immune against: {immunity}")
-
-    # print the warning only if blocking ability is not the only one that the pokemon has
-    if len(abilities) > 1 and not additional_immunity == "":
-      print(f"WATCH OUT!!! This pokemon could have '{blocking_ability.strip()}', meaning an additional immunity against {additional_immunity}")
 
     if 'Thick Fat' in abilities:
       print(f"{name.capitalize()} could have 'Thick Fat' as ability, increasing its resistance against Fire and Ice moves")
