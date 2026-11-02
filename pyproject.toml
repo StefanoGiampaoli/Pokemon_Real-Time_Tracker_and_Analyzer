@@ -1,0 +1,15 @@
+[project]
+name = "pokemon-tracker"
+version = "3.0.0"
+description = "Enemy pokemon tracker for 4th and 5th generation (exclusive for DesMuME)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pandas>=3.1.0",
+    "pymem>=1.14.0",
+]
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.22.3",
+]

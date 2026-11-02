@@ -2,6 +2,7 @@ import pandas as pd
 import os
 import sys
 import ast
+from pathlib import Path
 
 # find the correct path
 def resource_path(relative_path):
@@ -50,9 +51,9 @@ def add_pkmn(name, first_type, second_type, abilities, a_bug, a_dark, a_dragon, 
     }
 
 # read, load and prepare the dataset
-filepath = resource_path('raw_pokemon.csv')
+filepath = resource_path('datasets/raw_pokemon.csv')
 df = pd.read_csv(filepath)
-columns_to_keep = ['name', 'type1', 'type2', 'abilities'] + df.filter(like="against").columns.to_list()
+columns_to_keep = ['pokedex_number', 'name', 'type1', 'type2', 'abilities'] + df.filter(like="against").columns.to_list()
 new_df = df[columns_to_keep].copy()
 new_df['abilities'] = new_df['abilities'].apply(fix_abilities_string)
 
@@ -165,4 +166,5 @@ new_pkmn = [
 updated_df = pd.DataFrame(new_pkmn)
 final_df = pd.concat([new_df, updated_df], ignore_index=True)
 final_df['name'] = final_df['name'].apply(fix_names)
-final_df.to_csv("final_pokemon.csv", index=False)
+output_path = Path(__file__).resolve().parent.parent / "datasets" / "final_pokemon.csv"
+final_df.to_csv(output_path, index=False)

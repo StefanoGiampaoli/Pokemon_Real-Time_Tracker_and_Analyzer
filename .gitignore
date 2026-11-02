@@ -1,28 +1,28 @@
-# Virtual Environment
-.venv/
-venv/
-env/
-
-# Bytecode Python
-__pycache__/
+# Python
+pycache/
 *.py[cod]
 *$py.class
 
-# PyInstaller & Build
+# Environment
+.venv/
+venv/
+env/
+.env
+
+#Build & PyInstaller
 build/
 dist/
 *.spec
+*.exe
 
-# File temporanei di sistema o editor
+# Configurations
+configurations/config.json
+
+# Playground / Temp
+playground/
+
+# OS & IDE
 .vscode/
 .idea/
-*.log
 .DS_Store
 Thumbs.db
-
-# File temporanei / demo personali
-improvements.txt
-demo.py
-
-# Dati
-final_pokemon.csv
