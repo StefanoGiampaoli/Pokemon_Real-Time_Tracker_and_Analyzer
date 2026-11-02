@@ -18,8 +18,9 @@ dist/
 # Configurations
 configurations/config.json
 
-# Playground / Temp
+# Playground / Dev
 playground/
+dev notes/
 
 # OS & IDE
 .vscode/
