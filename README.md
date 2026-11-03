@@ -17,18 +17,19 @@ A real-time memory tracking utility for Pokémon Generation 4 and Generation 5 g
 .
 ├── .github/
 │   └── workflows/
-│       └── build.yaml            # Automated PyInstaller build via GitHub Actions
+│       └── build.yaml              # Automated PyInstaller build via GitHub Actions
 ├── configurations/
-│   └── config.json               # User-specific local paths (ignored by git)
+│   └── config.json                 # User-specific local paths (ignored by git)
 ├── datasets/
-│   └── final_pokemon.csv         # Database of Pokémon types and matchups
+│   └── final_pokemon.csv           # Database of Pokémon types and matchups
 ├── scripts/
-│   ├── pkmm_analyzer.py          # Calculates pokemon matchups with every type
-│   ├── pokemon_memory_reader.py  # Core RAM hooking and pointer traversal logic
-│   └── data_cleaner.py           # Utility for dataset maintenance
-├── main.py                       # Application entry point & process manager
-├── pyproject.toml                # Python dependencies configuration
-├── uv.lock                       # Fast package manager lockfile
+│   ├── data_cleaner.py             # Utility for dataset maintenance
+|   ├── dynamic_dataset_builder.py  # Modifies the dataset according to the current gen
+│   ├── pkmm_analyzer.py            # Calculates pokemon matchups with every type
+│   └── pokemon_memory_reader.py    # Core RAM hooking and pointer traversal logic
+├── main.py                         # Application entry point & process manager
+├── pyproject.toml                  # Python dependencies configuration
+├── uv.lock                         # Fast package manager lockfile
 └── README.md
 ```
 
@@ -81,7 +82,15 @@ If you downloaded `tracker.exe` from the GitHub Actions artifacts (or built it y
 uv run pyinstaller --noconfirm --onefile --icon="ultraball.ico" --add-data "datasets/final_pokemon.csv;datasets" --name "tracker.exe" main.py
 ```
 
----
+### 3. Dataset Management
+If you need to update or modify the Pokémon dataset (`final_pokemon.csv`), it is highly recommended to apply your changes to the raw datasets and execute `data_cleaner.py`, which is responsible for cleaning, merging, and generating the final dataset. 
+
+Run the following command before launching the main tracker:
+
+```bash
+# Generate an updated version of final_pokemon.csv
+uv run scripts/data_cleaner.py
+```
 
 ## Runtime Architecture & Memory Polling Lifecycle
 

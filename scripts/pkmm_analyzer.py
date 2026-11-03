@@ -10,13 +10,13 @@ def format_types(type_list):
     """"Format types' lists into single-easier readable words"""
     if not type_list:
         return "None"
-    return ", ".join([t.capitalize() for t in type_list])
+    return ", ".join([t for t in type_list])
 
 # main function
-def enemy_analysis(df, col_id, pokemon_id, max_dex, battle_type):
+def enemy_analysis(df, columns, pokemon_id, max_dex, battle_type):
     """Extract the current pokemon' info e print them in the terminal"""
     info = df.get(pokemon_id)
-    clmns_name = col_id
+    clmns_name = columns
 
     if not (pokemon_id > 0 and pokemon_id <= max_dex):
         print(f"[!] ID {pokemon_id} not found")

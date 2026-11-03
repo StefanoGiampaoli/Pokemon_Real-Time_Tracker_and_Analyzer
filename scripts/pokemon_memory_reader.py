@@ -1,7 +1,6 @@
 import pymem
 import pymem.process
 
-
 class PokemonMemoryReader:
     PROCESS_NAME = "DeSmuME_0.9.13_x64.exe"
     RAM_BASE_OFFSET = 0xA915400
@@ -58,12 +57,34 @@ class PokemonMemoryReader:
                 return False
 
             self.ds_ram_base = modulo.lpBaseOfDll + self.RAM_BASE_OFFSET
-            print("Connected!")
+            print("[*] Connected!")
             return True
         except Exception:
             self.pm = None
             self.ds_ram_base = None
             return False
+
+    def get_gen(self) -> tuple[dict, int] | None:
+        try:
+            if not self.pm or not self.ds_ram_base:
+                if not self.connect():
+                    return None
+
+            game_code = self.pm.read_bytes(self.ds_ram_base + self.GAME_CODE_OFFSET, 4).decode("ascii", errors="ignore")
+            game_profile = self.GAME_PROFILES.get(game_code)
+            if not game_profile:
+                return None
+            
+            if self.current_game != game_code:
+                self.current_game = game_code
+                print(f"[*] Game detected: Pokemon {game_profile['name']} [{game_code}]")
+
+            return game_profile, game_profile['gen']
+
+        except (pymem.exception.MemoryReadError, pymem.exception.ProcessError):
+            return None
+        except Exception:
+            return None     
         
     @staticmethod
     def is_valid_pointer(ptr: int) -> bool:
@@ -168,33 +189,15 @@ class PokemonMemoryReader:
         sorted_enemies = sorted(active_enemies.items(), key=lambda x: -x[0])
         return [species for _, species in sorted_enemies]
 
-    def get_enemy_pokemon(self) -> tuple[list[int], int] | None:
+    def get_enemy_pokemon(self, profile: dict) -> tuple[list[int], int] | None:
         """Return a tuple of (list_of_enemy_species, max_dex) if in battle, else None."""
-        if not self.pm or not self.ds_ram_base:
-            if not self.connect():
-                return None
+        
+        if profile["gen"] == 4:
+            enemies = self.read_gen4_battle(profile)
+        else:
+            enemies = self.read_gen5_battle(profile)
 
-        try:
-            game_code = self.pm.read_bytes(self.ds_ram_base + self.GAME_CODE_OFFSET, 4).decode("ascii", errors="ignore")
-            game_profile = self.GAME_PROFILES.get(game_code)
-            if not game_profile:
-                return None
+        if enemies:
+            return enemies, profile["max_dex"]
 
-            if self.current_game != game_code:
-                self.current_game = game_code
-                print(f"[*] Game detected: Pokemon {game_profile['name']} [{game_code}]")
-
-            if game_profile["gen"] == 4:
-                enemies = self.read_gen4_battle(game_profile)
-            else:
-                enemies = self.read_gen5_battle(game_profile)
-
-            if enemies:
-                return enemies, game_profile["max_dex"]
-
-            return None
-
-        except (pymem.exception.MemoryReadError, pymem.exception.ProcessError):
-            return None
-        except Exception:
-            return None
+        return None
