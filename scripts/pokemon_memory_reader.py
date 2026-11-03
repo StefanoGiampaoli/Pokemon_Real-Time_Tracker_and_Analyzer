@@ -151,7 +151,18 @@ class PokemonMemoryReader:
                 if 0 <= (val - 0x02000000) + 0x0C <= self.RAM_SIZE - 20:
                     sp = self.pm.read_ushort(test_addr)
                     mhp = self.pm.read_ushort(test_addr + 0x02)
-                    if 1 <= sp <= profile["max_dex"] and 1 <= mhp < 1000:
+                    hp = self.pm.read_ushort(test_addr + 0x04)
+                    lv = self.pm.read_bytes(test_addr + 0x0C, 1)[0]
+                    pid = self.pm.read_bytes(test_addr + 0x0D, 1)[0]
+                    flag = self.pm.read_bytes(test_addr + 0x0F, 1)[0]
+
+                    # Strict validation to avoid any dirty/fake address pointer
+                    if (1 <= sp <= profile["max_dex"] and 
+                        0 <= hp <= mhp < 1000 and
+                        1 <= lv <= 100 and
+                        pid <= 15 and
+                        (flag == 0x00 or flag == 0x80)): # 0 reserve; 0x80 active
+
                         p_anchor = val
                         break
 
