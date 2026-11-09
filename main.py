@@ -8,7 +8,7 @@ from scripts.dynamic_dataset_builder import build_modern_dataset, build_old_data
 from scripts.pkmm_analyzer import enemy_analysis
 
 
-def checking_loop(emulator_process, df, columns, reader):
+def checking_loop(emulator_process, df, reader):
     """"Check constantly DeSmuME RAM for new pokemon during battle"""
     print("[*] Waiting for DeSmuME memory hook...")
 
@@ -26,9 +26,9 @@ def checking_loop(emulator_process, df, columns, reader):
     game_profile, gen = reader.get_gen()
 
     if gen >= 6:
-        df, columns = build_modern_dataset(df, columns)
+        df = build_modern_dataset(df)
     else:
-        df, columns = build_old_dataset(df, columns)
+        df = build_old_dataset(df)
 
     recent_id = []
     last_id = None
@@ -54,7 +54,7 @@ def checking_loop(emulator_process, df, columns, reader):
             for _, enemy_species in enumerate(enemy_list, start=1):
                 battle_type = 3 if len(enemy_list) > 2 else 2 if len(enemy_list) == 2 else 1
                 if enemy_species not in recent_id and (enemy_species != last_id or battle_type != last_battle_type):
-                    enemy_analysis(df, columns, enemy_species, max_dex, battle_type=battle_type)
+                    enemy_analysis(df, enemy_species, max_dex, battle_type=battle_type)
                     recent_id.append(enemy_species) # solve an infinite print in double battles
                     last_id = enemy_species         # avoid printing continously the same species back to back
                     last_battle_type = battle_type  # avoid a bug where a double battle is not detected if it has the same pokemon of a previous single battle (and the other way around)
@@ -65,7 +65,7 @@ def checking_loop(emulator_process, df, columns, reader):
 if __name__ == "__main__":
     config = load_config()
 
-    df_pokemon, columns = load_dataset(config["dataset_path"])
+    dataset = load_dataset(config["dataset_path"])
 
     # Launch the emulator
     emulator_process = launch_emulator(config["desmume_path"], config["rom_path"], config["app_dir"])
@@ -80,6 +80,6 @@ if __name__ == "__main__":
     )
 
     try:
-        checking_loop(emulator_process, df_pokemon, columns, reader)
+        checking_loop(emulator_process, dataset, reader)
     except KeyboardInterrupt:
         print("\nClosing the app...")

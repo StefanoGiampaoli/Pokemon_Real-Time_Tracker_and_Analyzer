@@ -13,19 +13,18 @@ def format_types(type_list):
     return ", ".join([t for t in type_list])
 
 # main function
-def enemy_analysis(df, columns, pokemon_id, max_dex, battle_type):
+def enemy_analysis(df, pokemon_id, max_dex, battle_type):
     """Extract the current pokemon' info e print them in the terminal"""
     info = df.get(pokemon_id)
-    clmns_name = columns
 
     if not (pokemon_id > 0 and pokemon_id <= max_dex):
         print(f"[!] ID {pokemon_id} not found")
         return
     
-    name = info[1]
-    first_type = info[2]
-    second_type = info[3]
-    abilities = info[4]
+    name = info.name
+    first_type = info.type1
+    second_type = info.type2
+    abilities = info.abilities
 
     blocking_moves_abilities = [
       ['Water Absorb', 'Storm Drain', 'Dry Skin'],    # block water moves
@@ -57,10 +56,7 @@ def enemy_analysis(df, columns, pokemon_id, max_dex, battle_type):
     quad_effective, super_effective, normal = [], [], []
     resistence, quad_resistence, immunity = [], [], []
 
-    for i in range(5, len(info)):
-      damage = info[i]
-      move_type = (clmns_name[i].split("_"))[1]
-
+    for move_type, damage in info.matchups.items():
       match damage:
         case 4:
           quad_effective.append(move_type)
@@ -85,9 +81,9 @@ def enemy_analysis(df, columns, pokemon_id, max_dex, battle_type):
       print(f" 🚀 [TRIPLE/ROTATION BATTLE DETECTED]: #{pokemon_id} {name.upper()}")
 
     # clearing types
-    types_str = first_type.capitalize()
+    types_str = first_type
     if second_type:
-        types_str += f" / {second_type.capitalize()}"
+        types_str += f" / {second_type}"
     print(f" 📌 Type: {types_str}")
     print("─" * 50)
 
@@ -122,6 +118,6 @@ def enemy_analysis(df, columns, pokemon_id, max_dex, battle_type):
 
     # Other special cases
     if 'Thick Fat' in abilities:
-        print(f" ❄️ {name.capitalize()} could have Thick Fat (Stronger resistence vs Fire and Ice)")
+        print(f" ❄️ {name} could have Thick Fat (Stronger resistence vs Fire and Ice)")
 
     print("═" * 50 + "\n")
