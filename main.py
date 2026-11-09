@@ -34,7 +34,7 @@ def show_GUI():
 
     messagebox.showinfo(
         "Initial configuration",
-        "First select the DeSmuME executable and then a .nds Pokemon ROM",
+        "First select the DeSmuME executable and then a USA version .nds Pokemon ROM",
         parent=root,
     )
 
@@ -47,7 +47,7 @@ def show_GUI():
         sys.exit(0)
 
     rom_path = filedialog.askopenfilename(
-        title="2- Select a .nds Pokemon ROM",
+        title="2- Select a USA version .nds Pokemon ROM",
         filetypes=[("Nintendo DS ROM", "*nds")]
     )
 

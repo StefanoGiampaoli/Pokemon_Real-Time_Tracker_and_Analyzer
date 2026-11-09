@@ -15,18 +15,13 @@ class PokemonMemoryReader:
         "APAE": {"name": "Pearl (USA)",      "gen": 4, "base": 0x00107120, "offsets": [0x10, 0x5CAC], "off_hp": 0x4C, "off_max_hp": 0x50, "max_dex": 493},
 
         # --- Platinum ---
-        "CPUI": {"name": "Platino (ITA)",    "gen": 4, "base": 0x00102004, "offsets": [0x10, 0x5ED4], "off_hp": 0x4C, "off_max_hp": 0x50, "max_dex": 493},
         "CPUE": {"name": "Platinum (USA)",   "gen": 4, "base": 0x00101EA4, "offsets": [0x10, 0x5ED4], "off_hp": 0x4C, "off_max_hp": 0x50, "max_dex": 493},
 
         # --- HeartGold & SoulSilver ---
-        "IPKI": {"name": "HeartGold (ITA)",  "gen": 4, "base": 0x001119A4, "offsets": [0x10, 0x5F24], "off_hp": 0x4C, "off_max_hp": 0x50, "max_dex": 493},
-        "IPGI": {"name": "SoulSilver (ITA)", "gen": 4, "base": 0x001119A4, "offsets": [0x10, 0x5F24], "off_hp": 0x4C, "off_max_hp": 0x50, "max_dex": 493},
         "IPKE": {"name": "HeartGold (USA)",  "gen": 4, "base": 0x00111A04, "offsets": [0x10, 0x5F24], "off_hp": 0x4C, "off_max_hp": 0x50, "max_dex": 493},
         "IPGE": {"name": "SoulSilver (USA)", "gen": 4, "base": 0x00111A04, "offsets": [0x10, 0x5F24], "off_hp": 0x4C, "off_max_hp": 0x50, "max_dex": 493},
 
         # --- White & Black ---
-        "IRAI": {"name": "Bianco (ITA)",     "gen": 5, "base": 0x000F30D8, "p2_offsets": [0x6A4],                                         "max_dex": 649},
-        "IRBI": {"name": "Nero (ITA)",       "gen": 5, "base": 0x000F30D8, "p2_offsets": [0x6A4],                                         "max_dex": 649},
         "IRAO": {"name": "White (USA)",      "gen": 5, "base": 0x00146284, "p2_offsets": [0x214, 0x14],                                   "max_dex": 649},
         "IRBO": {"name": "Black (USA)",      "gen": 5, "base": 0x00146284, "p2_offsets": [0x214, 0x14],                                   "max_dex": 649},
 
@@ -42,6 +37,7 @@ class PokemonMemoryReader:
         self.pm = None
         self.ds_ram_base = None
         self.current_game = None
+        self.cached_anchor: int | None = None # Caches the combat array anchor
 
     def connect(self) -> bool:
         """Try to connect to DeSmuME process and compute RAM base offset."""
@@ -125,7 +121,7 @@ class PokemonMemoryReader:
         return active_enemies if active_enemies else None
 
     # 5h gen reader helper functions
-    def _is_valid_enemy_mon(self, test_addr: int, max_dex: int) -> bool:
+    def is_valid_enemy_mon(self, test_addr: int, max_dex: int) -> bool:
         """Helper function to convalidate an active battlemon structure"""
         sp = self.pm.read_ushort(test_addr)
         mhp = self.pm.read_ushort(test_addr + 0x02)
@@ -137,13 +133,13 @@ class PokemonMemoryReader:
         if (1 <= sp <= max_dex and 
             1 <= mhp < 1000 and 0 <= hp <= mhp and
             1 <= lv <= 100 and
-            (8 <= pid <= 13)): # enemy goes from 8 to 13
+            (8 <= pid <= 13)): # Enemy goes from 8 to 13
             
             if flag == 0x00 or (flag & 0x80) != 0:
                 return True
         return False
 
-    def _verify_array_has_player(self, anchor_species_ds: int, max_dex: int) -> bool:
+    def verify_array_has_player(self, anchor_species_ds: int, max_dex: int) -> bool:
         """Check that the array found has actually a player's pokemon too"""
         for step in range(-12, 13):
             slot_ram = (anchor_species_ds + (step * self.GEN5_STRIDE)) - 0x02000000
@@ -160,7 +156,7 @@ class PokemonMemoryReader:
             if (1 <= sp <= max_dex and 
                 1 <= mhp < 1000 and 0 <= hp <= mhp and
                 1 <= lv <= 100 and
-                0 <= pid <= 5): # player goes from 0 to 5
+                0 <= pid <= 5): # Player goes from 0 to 5
                 
                 return True
                 
@@ -173,46 +169,57 @@ class PokemonMemoryReader:
 
     def read_gen5_battle(self, profile: dict) -> tuple[list[int], int] | None:
         """Read active enemy Pokemon in 5th Gen battles. Uses fast-path, then falls back to Global Heap Scan."""
-
-        # first try --> rapid one for classic battles
-        ptr_base = self.pm.read_uint(self.ds_ram_base + profile["base"])
         p_anchor = None
+
+        # First of all cache validation, it would shrink the complexity from O(N) to O(1)
+        if self.cached_anchor and self.is_valid_pointer(self.cached_anchor):
+            test_addr = self.ds_ram_base + (self.cached_anchor - 0x02000000) + 0x0C
+            if self.is_valid_enemy_mon(test_addr, profile["max_dex"]):
+                if self.verify_array_has_player(self.cached_anchor + 0x0C, profile["max_dex"]):
+                    p_anchor = self.cached_anchor
+
+        if not p_anchor:
+            ptr_base = self.pm.read_uint(self.ds_ram_base + profile["base"])
         
-        if self.is_valid_pointer(ptr_base):
-            p1_off = ptr_base - 0x02000000
-            for off in profile["p2_offsets"]:
-                p2_ptr = self.pm.read_uint(self.ds_ram_base + p1_off + off)
-                if self.is_valid_pointer(p2_ptr):
-                    p2_off = p2_ptr - 0x02000000
-                    for inner_off in range(0x000, 0x800, 4):
-                        val = self.pm.read_uint(self.ds_ram_base + p2_off + inner_off)
-                        if self.is_valid_pointer(val):
-                            test_addr = self.ds_ram_base + (val - 0x02000000) + 0x0C
-                            if self._is_valid_enemy_mon(test_addr, profile["max_dex"]):
-                                # anti-false-positive check: it has to contain also player's pokemon
-                                if self._verify_array_has_player(val + 0x0C, profile["max_dex"]):
+            if self.is_valid_pointer(ptr_base):
+                p1_off = ptr_base - 0x02000000
+                for off in profile["p2_offsets"]:
+                    p2_ptr = self.pm.read_uint(self.ds_ram_base + p1_off + off)
+                    if self.is_valid_pointer(p2_ptr):
+                        p2_off = p2_ptr - 0x02000000
+                        for inner_off in range(0x000, 0x800, 4):
+                            val = self.pm.read_uint(self.ds_ram_base + p2_off + inner_off)
+                            if self.is_valid_pointer(val):
+                                test_addr = self.ds_ram_base + (val - 0x02000000) + 0x0C
+                                if self.is_valid_enemy_mon(test_addr, profile["max_dex"]):
+                                    # Anti-false-positive check: it has to contain also player's pokemon
+                                    if self.verify_array_has_player(val + 0x0C, profile["max_dex"]):
+                                        p_anchor = val
+                                        break
+                        if p_anchor:
+                            break
+
+            # Global fallback research for singular events (tutorial, scripted events, ecc...)
+            if not p_anchor:
+                heap_start = 0x200000
+                heap_end = 0x2A0000
+                for ram_offset in range(heap_start, heap_end, 4):
+                    val = self.pm.read_uint(self.ds_ram_base + ram_offset)
+                    if self.is_valid_pointer(val):
+                        test_addr = self.ds_ram_base + (val - 0x02000000) + 0x0C
+                        if 0 <= (val - 0x02000000) + 0x0C <= self.RAM_SIZE - 20:
+                            if self.is_valid_enemy_mon(test_addr, profile["max_dex"]):
+                                # anti-false-positive check 
+                                if self.verify_array_has_player(val + 0x0C, profile["max_dex"]):
                                     p_anchor = val
                                     break
-                    if p_anchor:
-                        break
-
-        # global fallback research for singular events (tutorial, scripted events, ecc...)
-        if not p_anchor:
-            heap_start = 0x200000
-            heap_end = 0x2A0000
-            for ram_offset in range(heap_start, heap_end, 4):
-                val = self.pm.read_uint(self.ds_ram_base + ram_offset)
-                if self.is_valid_pointer(val):
-                    test_addr = self.ds_ram_base + (val - 0x02000000) + 0x0C
-                    if 0 <= (val - 0x02000000) + 0x0C <= self.RAM_SIZE - 20:
-                        if self._is_valid_enemy_mon(test_addr, profile["max_dex"]):
-                            # anti-false-positive check 
-                            if self._verify_array_has_player(val + 0x0C, profile["max_dex"]):
-                                p_anchor = val
-                                break
 
         if not p_anchor:
+            self.cached_anchor = None # Invalidate the cache if battle ended
             return None
+
+        # Cache the valid anchor for the polling tick
+        self.cached_anchor = p_anchor
 
         # Retrieve infos and deduplicate it through Party ID
         anchor_species_ds = p_anchor + 0x0C
@@ -239,6 +246,7 @@ class PokemonMemoryReader:
                     active_enemies[pid] = species
 
         if not active_enemies:
+            self.cached_anchor = None # Safety fallback
             return None
 
         sorted_enemies = sorted(active_enemies.items(), key=lambda x: -x[0])
@@ -259,7 +267,7 @@ class PokemonMemoryReader:
             return None
             
         except (pymem.exception.MemoryReadError, pymem.exception.ProcessError):
-            # the emulator has been closed or the memory has been freed
+            # The emulator has been closed or the memory has been freed
             self.pm = None
             self.ds_ram_base = None
             self.current_game = None
