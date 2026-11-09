@@ -1,3 +1,7 @@
+import ast
+import csv
+
+
 TYPE_CHART_GEN_2_TO_5 = {
     # move selected -> {enemy type's multiplier}
     "Normal":   {"Rock": 0.5, "Ghost": 0.0, "Steel": 0.5},
@@ -65,6 +69,39 @@ PRE_GEN_6_TYPE_CHANGES = {
     546: ["Grass", None],
     547: ["Grass", None],
 }
+
+def load_dataset(dataset_path):
+    """Load the dataset"""
+    dataset = {}
+    columns = []
+    
+    with open(dataset_path, mode="r", encoding="utf-8") as f:
+        reader = csv.reader(f)
+        columns = next(reader)
+        id_idx = columns.index("pokedex_number")
+        
+        for row in reader:
+            if not row or not row[id_idx]:
+                continue
+            poke_id = int(float(row[id_idx]))
+            
+            # Transform the values
+            parsed_row = [
+                poke_id,
+                row[1],                                     # name
+                row[2],                                     # first_type
+                row[3] if row[3] != "" else None,           # second_type
+                ast.literal_eval(row[4]),                   # abilities
+            ]
+
+            # Damage multipliers
+            for val in row[5:]:
+                num = float(val)
+                parsed_row.append(int(num) if num.is_integer() else num)
+                
+            dataset[poke_id] = parsed_row
+                
+    return dataset, columns
 
 def build_old_dataset(df, columns):
     for id, types in PRE_GEN_6_TYPE_CHANGES.items():

@@ -54,7 +54,7 @@ If you run the compiled `.exe`, a visual prompt will open automatically. Simply 
 Create a file named `config.json` inside the `configurations/` folder:
 ```json
 {
-    "desmume_exe": "C:\\Path\\To\\DeSmuME_0.9.13_x64.exe",
+    "desmume_path": "C:\\Path\\To\\DeSmuME_0.9.13_x64.exe",
     "rom_path": "C:\\Path\\To\\Your_Pokemon_ROM.nds"
 }
 ```
