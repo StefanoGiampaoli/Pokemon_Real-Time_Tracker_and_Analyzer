@@ -4,7 +4,7 @@ A real-time memory tracking utility for Pokémon Generation 4 and Generation 5 g
 
 ## Features
 * **Zero-Click Tracking:** Automatically detects when you enter and exit battles.
-* **Universal Gen 4 & 5 Support:** Works flawlessly across Diamond, Pearl, Platinum, HeartGold, SoulSilver, Black, White, Black 2, and White 2.
+* **Universal Gen 4 & 5 Support:** Works flawlessly across Diamond, Pearl, Platinum, HeartGold, SoulSilver, Black, White, Black 2, and White 2 (**ONLY .NDS'S USA VERSION ARE CURRENTLY ACCEPTED**).
 * **Complex Battle Handling:** Dynamically maps memory to support multiple enemies at once.
 * **Tactical Readout:** Instantly calculates and displays the enemy's type matchups via a local CSV dataset.
 * **Standalone Executable:** Can be compiled into a single `.exe` using PyInstaller for easy distribution.
@@ -45,16 +45,16 @@ A real-time memory tracking utility for Pokémon Generation 4 and Generation 5 g
 
 ## Configuration
 
-The application requires the exact file paths to your DeSmuME executable and the Nintendo DS ROM you wish to play. 
+The application requires the exact file paths to your DeSmuME executable and the **USA** Nintendo DS ROM you wish to play. 
 
 **Option A: Automatic GUI Setup:**
-If you run the compiled `.exe`, a visual prompt will open automatically. Simply select your DeSmuME executable and your `.nds` ROM file through the dialog windows.
+If you run the compiled `.exe`, a visual prompt will open automatically. Simply select your DeSmuME executable and your **USA** `.nds` ROM file through the dialog windows.
 
 **Option B: Manual Setup:**
 Create a file named `config.json` inside the `configurations/` folder:
 ```json
 {
-    "desmume_exe": "C:\\Path\\To\\DeSmuME_0.9.13_x64.exe",
+    "desmume_path": "C:\\Path\\To\\DeSmuME_0.9.13_x64.exe",
     "rom_path": "C:\\Path\\To\\Your_Pokemon_ROM.nds"
 }
 ```
