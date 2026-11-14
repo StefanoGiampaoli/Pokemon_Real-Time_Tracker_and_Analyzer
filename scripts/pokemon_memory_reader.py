@@ -1,5 +1,4 @@
-import pymem
-import pymem.process
+from PyMemoryEditor import OpenProcess, PyMemoryEditorError
 
 class PokemonMemoryReader:
     PROCESS_NAME = "DeSmuME_0.9.13_x64.exe"
@@ -43,16 +42,16 @@ class PokemonMemoryReader:
         """Try to connect to DeSmuME process and compute RAM base offset."""
         try:
             if self.pid:
-                self.pm = pymem.Pymem()
-                self.pm.open_process_from_id(self.pid)
+                self.pm = OpenProcess(pid=self.pid)
             else:
-                self.pm = pymem.Pymem(self.PROCESS_NAME)
+                self.pm = OpenProcess(name=self.PROCESS_NAME)
 
-            modulo = pymem.process.module_from_name(self.pm.process_handle, self.PROCESS_NAME)
+            process_name = self.PROCESS_NAME.lower()
+            modulo = next((m for m in self.pm.get_modules() if m.name.lower() == process_name), None)
             if not modulo:
                 return False
 
-            self.ds_ram_base = modulo.lpBaseOfDll + self.RAM_BASE_OFFSET
+            self.ds_ram_base = modulo.base_address + self.RAM_BASE_OFFSET
             print("[*] Connected!")
             return True
         except Exception:
@@ -78,7 +77,7 @@ class PokemonMemoryReader:
 
             return game_profile, game_profile['gen']
 
-        except (pymem.exception.MemoryReadError, pymem.exception.ProcessError):
+        except (OSError, PyMemoryEditorError):
             return None
         except Exception:
             return None
@@ -266,7 +265,7 @@ class PokemonMemoryReader:
 
             return None
             
-        except (pymem.exception.MemoryReadError, pymem.exception.ProcessError):
+        except (OSError, PyMemoryEditorError):
             # The emulator has been closed or the memory has been freed
             self.pm = None
             self.ds_ram_base = None
