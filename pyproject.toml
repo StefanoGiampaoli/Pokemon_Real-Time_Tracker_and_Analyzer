@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "pandas>=3.1.0",
-    "pymem>=1.14.0",
+    "pymemoryeditor>=3.4.3",
 ]
 
 [dependency-groups]

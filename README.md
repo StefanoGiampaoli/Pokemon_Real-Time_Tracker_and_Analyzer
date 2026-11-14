@@ -37,7 +37,7 @@ A real-time memory tracking utility for Pokémon Generation 4 and Generation 5 g
 
 ## Requirements
 
-* **Operating System:** Windows (Required for `pymem` memory hooking).
+* **Operating System:** Windows (the memory offsets target the Windows build of DeSmuME).
 * **Emulator:** `DeSmuME_0.9.13_x64.exe` (Specifically targeted by the memory reader).
 * **Python Environment:** Python 3.12+ (Managed via [uv](https://docs.astral.sh/uv/)).
 
@@ -105,7 +105,7 @@ The system operates across three primary layers:
 │                   DeSmuME (x64)                        │
 │   Simulated ARM9 Main RAM (0x02000000 - 0x023FFFFF)    │
 └───────────────────────────▲────────────────────────────┘
-                            │ PyMem Read Operations
+                            │ PyMemoryEditor Read Operations
 ┌───────────────────────────┴────────────────────────────┐
 │              PokemonMemoryReader Engine                │
 │   - ROM Header Identification (0x3FFE0C)               │
